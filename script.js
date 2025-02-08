@@ -274,4 +274,4 @@ document.addEventListener('DOMContentLoaded', function () {
   
     // Initial Check for Authentication
     checkAuth();
-  });  
+  });
