@@ -1,0 +1,75 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Daily To-Do - Loading</title>
+  <style>
+    /* Basic Reset */
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+    }
+    /* Full-Screen Container */
+    body {
+      background-color: #007bff; /* Background color (blue) */
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      height: 100vh;
+      overflow: hidden;
+      color: #fff;
+      font-family: Arial, sans-serif;
+    }
+    /* Flash Container with Animation */
+    .flash-container {
+      text-align: center;
+      animation: flashAnimation 3s ease-in-out forwards;
+    }
+    .flash-logo {
+      font-size: 3rem;
+      font-weight: bold;
+      letter-spacing: 2px;
+      opacity: 0;
+      animation: logoFadeIn 1s ease-in-out forwards;
+    }
+    .flash-subtext {
+      font-size: 1.2rem;
+      margin-top: 10px;
+      opacity: 0;
+      animation: subtextFadeIn 1s ease-in-out forwards;
+      animation-delay: 0.5s;
+    }
+    /* Keyframes for the overall flash fade-out */
+    @keyframes flashAnimation {
+      0% { opacity: 1; }
+      80% { opacity: 1; }
+      100% { opacity: 0; }
+    }
+    /* Keyframes for logo fade in and scale */
+    @keyframes logoFadeIn {
+      from { opacity: 0; transform: scale(0.5); }
+      to { opacity: 1; transform: scale(1); }
+    }
+    /* Keyframes for subtext fade in and slide */
+    @keyframes subtextFadeIn {
+      from { opacity: 0; transform: translateY(20px); }
+      to { opacity: 1; transform: translateY(0); }
+    }
+  </style>
+</head>
+<body>
+  <div class="flash-container">
+    <div class="flash-logo">Daily To-Do</div>
+    <div class="flash-subtext">Organize your day!</div>
+  </div>
+
+  <script>
+    // Wait 3 seconds before navigating to auth.html
+    setTimeout(function() {
+      window.location.href = "auth.html";
+    }, 3000);
+  </script>
+</body>
+</html>
