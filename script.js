@@ -16,11 +16,46 @@ document.addEventListener('DOMContentLoaded', function () {
     const historyList = document.getElementById('historyList');
     const authErrorMessage = document.getElementById('authErrorMessage');
   
+    // Modal elements
+    const confirmModal = document.getElementById('confirmModal');
+    const modalMessage = document.getElementById('modalMessage');
+    const modalYesBtn = document.getElementById('modalYesBtn');
+    const modalNoBtn = document.getElementById('modalNoBtn');
+  
+    // Data
     let currentUser = null;
     let users = JSON.parse(localStorage.getItem('users')) || [];
     let tasks = JSON.parse(localStorage.getItem('tasks')) || [];
   
-    // Show To-Do Section if User is Logged In
+    // -----------------------------
+    // Modal Utility Functions
+    // -----------------------------
+    function showConfirmModal(message, yesCallback, noCallback) {
+      modalMessage.textContent = message;
+      confirmModal.classList.remove('hidden');
+      confirmModal.classList.add('show');
+  
+      // "Yes" button
+      modalYesBtn.onclick = () => {
+        hideConfirmModal();
+        yesCallback();
+      };
+  
+      // "No" button
+      modalNoBtn.onclick = () => {
+        hideConfirmModal();
+        if (noCallback) noCallback();
+      };
+    }
+  
+    function hideConfirmModal() {
+      confirmModal.classList.remove('show');
+      confirmModal.classList.add('hidden');
+    }
+  
+    // -----------------------------
+    // Authentication Functions
+    // -----------------------------
     function checkAuth() {
       if (currentUser) {
         authSection.classList.add('hidden');
@@ -33,7 +68,6 @@ document.addEventListener('DOMContentLoaded', function () {
       }
     }
   
-    // Login Functionality
     loginBtn.addEventListener('click', function () {
       const username = usernameInput.value.trim();
       const password = passwordInput.value.trim();
@@ -41,7 +75,6 @@ document.addEventListener('DOMContentLoaded', function () {
       const user = users.find(u => u.username === username && u.password === password);
   
       if (user) {
-        // Clear any previous error message
         authErrorMessage.textContent = '';
         authErrorMessage.classList.add('hidden');
         currentUser = user;
@@ -52,7 +85,6 @@ document.addEventListener('DOMContentLoaded', function () {
       }
     });
   
-    // Signup Functionality
     signupBtn.addEventListener('click', function () {
       const username = usernameInput.value.trim();
       const password = passwordInput.value.trim();
@@ -66,7 +98,6 @@ document.addEventListener('DOMContentLoaded', function () {
           const newUser = { username, password };
           users.push(newUser);
           localStorage.setItem('users', JSON.stringify(users));
-  
           authErrorMessage.textContent = 'Account created successfully! You are now logged in.';
           authErrorMessage.classList.remove('hidden');
           currentUser = newUser;
@@ -78,13 +109,14 @@ document.addEventListener('DOMContentLoaded', function () {
       }
     });
   
-    // Logout Functionality
     logoutBtn.addEventListener('click', function () {
       currentUser = null;
       checkAuth();
     });
   
-    // Render Tasks for Selected Date
+    // -----------------------------
+    // Task / To-Do Functions
+    // -----------------------------
     function renderTasks() {
       if (!currentUser) return;
   
@@ -107,7 +139,6 @@ document.addEventListener('DOMContentLoaded', function () {
           </div>
         `;
   
-        // Attach event listeners to the buttons
         const completeBtn = li.querySelector('.complete-btn');
         const deleteBtn = li.querySelector('.delete-btn');
   
@@ -120,7 +151,6 @@ document.addEventListener('DOMContentLoaded', function () {
       updateProgress(filteredTasks);
     }
   
-    // Update Progress Bar
     function updateProgress(filteredTasks) {
       const totalTasks = filteredTasks.length;
       const completedTasks = filteredTasks.filter(task => task.completed).length;
@@ -130,10 +160,7 @@ document.addEventListener('DOMContentLoaded', function () {
       progressText.textContent = `${progress}%`;
     }
   
-    // Add a New Task
     function addTask() {
-      console.log('addTask function called'); // Debug
-  
       if (!currentUser) {
         console.log('No current user, returning...');
         return;
@@ -143,17 +170,14 @@ document.addEventListener('DOMContentLoaded', function () {
       const selectedDate = datePicker.value;
   
       if (taskText === '') {
+        // Instead of alert, you can also show a modal or inline message
         alert('Please enter a task!');
-        console.log('Task text is empty');
         return;
       }
       if (!selectedDate) {
         alert('Please select a date!');
-        console.log('No date selected');
         return;
       }
-  
-      console.log('Creating new task with text:', taskText, 'and date:', selectedDate);
   
       const newTask = {
         id: Date.now(),
@@ -165,56 +189,53 @@ document.addEventListener('DOMContentLoaded', function () {
   
       tasks.push(newTask);
       localStorage.setItem('tasks', JSON.stringify(tasks));
-      console.log('New task added to localStorage:', newTask);
   
       taskInput.value = '';
       renderTasks();
       renderHistory();
     }
   
-    // Toggle Task Completion (using task ID)
-    function toggleComplete(taskId) {
-      const taskIndex = tasks.findIndex(
-        t => t.id === taskId && t.username === currentUser.username
+    // -----------------------------
+    // Deletion / Confirmation
+    // -----------------------------
+    function deleteTask(taskId) {
+      // Instead of if(confirm(...)), we use a custom modal
+      showConfirmModal(
+        'Are you sure you want to delete this task?',
+        () => {
+          const taskIndex = tasks.findIndex(
+            t => t.id === taskId && t.username === currentUser.username
+          );
+          if (taskIndex !== -1) {
+            tasks.splice(taskIndex, 1);
+            localStorage.setItem('tasks', JSON.stringify(tasks));
+            renderTasks();
+            renderHistory();
+          }
+        }
       );
-      if (taskIndex !== -1) {
-        tasks[taskIndex].completed = !tasks[taskIndex].completed;
-        localStorage.setItem('tasks', JSON.stringify(tasks));
-        renderTasks();
-        renderHistory();
-      }
     }
   
-    // Delete a Task (using task ID)
-    function deleteTask(taskId) {
-      if (confirm('Are you sure you want to delete this task?')) {
-        const taskIndex = tasks.findIndex(
-          t => t.id === taskId && t.username === currentUser.username
-        );
-        if (taskIndex !== -1) {
-          tasks.splice(taskIndex, 1);
+    clearAllBtn.addEventListener('click', function () {
+      if (!currentUser) return;
+  
+      showConfirmModal(
+        'Are you sure you want to clear all tasks for this date?',
+        () => {
+          const selectedDate = datePicker.value;
+          tasks = tasks.filter(
+            task => !(task.date === selectedDate && task.username === currentUser.username)
+          );
           localStorage.setItem('tasks', JSON.stringify(tasks));
           renderTasks();
           renderHistory();
         }
-      }
-    }
-  
-    // Clear All Tasks for Selected Date
-    clearAllBtn.addEventListener('click', function () {
-      if (!currentUser) return;
-      if (confirm('Are you sure you want to clear all tasks for this date?')) {
-        const selectedDate = datePicker.value;
-        tasks = tasks.filter(
-          task => !(task.date === selectedDate && task.username === currentUser.username)
-        );
-        localStorage.setItem('tasks', JSON.stringify(tasks));
-        renderTasks();
-        renderHistory();
-      }
+      );
     });
   
-    // Render Daily History
+    // -----------------------------
+    // History
+    // -----------------------------
     function renderHistory() {
       if (!currentUser) return;
       const userTasks = tasks.filter(task => task.username === currentUser.username);
@@ -238,19 +259,19 @@ document.addEventListener('DOMContentLoaded', function () {
       }
     }
   
-    // Add Task on Button Click
+    // -----------------------------
+    // Event Listeners
+    // -----------------------------
     addTaskBtn.addEventListener('click', addTask);
   
-    // Add Task on Enter Key
     taskInput.addEventListener('keypress', function (e) {
       if (e.key === 'Enter') {
         addTask();
       }
     });
   
-    // Render Tasks When Date Changes
     datePicker.addEventListener('change', renderTasks);
   
     // Initial Check for Authentication
     checkAuth();
-  });
+  });  
